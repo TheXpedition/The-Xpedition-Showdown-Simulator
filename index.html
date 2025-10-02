@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Xpedition — Showdown</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#1a0008; --bg2:#2a0010; --bg3:#3a0016; --tile:#12020a; --ink:#f5e9ef;
+  --accent:#c1143b; --accent-2:#ff3b6a; --ok:#22c55e; --warn:#f59e0b; --danger:#e11d48; --muted:#cbd5e1;
+  --glass: rgba(255,255,255,.06);
+  --glass-brd: rgba(255,255,255,.12);
+  /* Track Record */
+  --tr-win:#4169E1;   /* WIN individual (oscuro, texto blanco) */
+  --tr-top2:#ffd700;     /* TOP2 (dorado) */
+  --tr-btm4:#FF6347;     /* BTM4 (vino) */
+  --tr-btm2:#FF6347;     /* BTM2 (duelo semifinal) */
+  --tr-high:#9ad9ff;     /* HIGH */
+  --tr-low:#ffb1c1;      /* LOW */
+  --tr-safe:#e5e7eb;     /* SAFE */
+  --tr-elim:#cf0000;     /* ELIM */
+  --tr-in:#00d0a9;       /* IN / ADV */
+  --tr-out:#800080;      /* OUT */
+  --tr-dead:#2f2f35;     /* gris inactivo */
+  --tr-dead-txt:#9aa0a6;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:Rubik,system-ui,Segoe UI,Roboto,Arial;
+  color:var(--ink);
+  background: radial-gradient(1200px 800px at 20% -10%, #0b0000 0%, var(--bg1) 35%, var(--bg2) 70%, var(--bg3) 100%);
+  overflow-x:hidden;
+}
+a{color:#ffdfe9}
+.wrap{ max-width:1180px; margin:16px auto; padding:12px 16px }
+.glass{
+  background:var(--glass); border:1px solid var(--glass-brd);
+  backdrop-filter: blur(10px) saturate(160%); border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+.header{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 14px }
+.brand{ display:flex; align-items:center; gap:12px }
+.logo{ width:60px; height:60px; border-radius:12px; background:#2a0010; display:grid; place-items:center; font-weight:800; color:#ffb3c7; border:0px solid #ff2a5b }
+.logo img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* cabe sin recortarse */
+  display: block;        /* quita espacios fantasmas */
+}
+.logo.rect{
+  width: 96px;
+  aspect-ratio: 3 / 2;  /* ajusta a tu logo: 16/9, 4/3, etc. */
+  height: auto;         /* se calcula solo por el aspect-ratio */
+}
+.h1{ font-size:22px; font-weight:800; letter-spacing:.4px }
+.step-indicator{ font-weight:800; color:#ff99b3 }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  height:40px; padding:0 14px; border-radius:12px; border:1px solid #531122; background:#26000c;
+  font-weight:800; color:#ffdfe9; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,.25);
+}
+.btn.primary{ background:linear-gradient(180deg,#ff2a5b,#a3002a); border:1px solid #ff658a }
+.btn.green{ background:linear-gradient(180deg,#22c55e,#15803d); border:1px solid #86efac; color:#0a0a0a }
+.btn.red{ background:linear-gradient(180deg,#ff5a5a,#991b1b); border:1px solid #fecaca }
+.btn:disabled{ opacity:.5; cursor:not-allowed }
+.help{ color:var(--muted); font-weight:600; }
+#backBtn{ display:none !important } /* No retroceder */
+
+.grid{ display:grid; gap:14px }
+.grid.cols-7{ grid-template-columns: repeat(7, minmax(0,1fr)); }
+@media (max-width:1200px){ .grid.cols-7{ grid-template-columns: repeat(6,1fr) } }
+@media (max-width:1040px){ .grid.cols-7{ grid-template-columns: repeat(5,1fr) } }
+@media (max-width:900px){ .grid.cols-7{ grid-template-columns: repeat(4,1fr) } }
+@media (max-width:680px){ .grid.cols-7{ grid-template-columns: repeat(3,1fr) } }
+@media (max-width:480px){ .grid.cols-7{ grid-template-columns: repeat(2,1fr) } }
+
+.slot{
+  position:relative;
+  background:var(--tile);
+  border:1px solid #3a0a17;
+  border-radius:16px;
+  padding:8px;
+  box-shadow:0 6px 18px rgba(0,0,0,.35);
+  transition:transform .15s ease, box-shadow .15s ease;
+  width:auto;
+  display:inline-block;
+  vertical-align:top;
+  margin:6px;
+}
+.slot:hover{ transform:translateY(-3px); box-shadow:0 10px 22px rgba(0,0,0,.45); }
+.icon{
+  position:relative; width:120px; height:120px; aspect-ratio:1/1; border-radius:14px;
+  background:linear-gradient(180deg,#2b0010,#120007);
+  border:1px solid #531122; display:grid; place-items:center; overflow:hidden; margin:0 auto 8px;
+}
+.icon img{ position:relative; z-index:0;  width:100%; height:100%; object-fit:cover; object-position:center; display:block; border-radius:inherit }
+.icon .placeholder{
+  width:56px; height:56px; border-radius:12px; background:#531122; display:grid; place-items:center;
+  font-size:18px; font-weight:800; color:#ff99b3;
+}
+.slot .name{ font-weight:800; font-size:13px; text-align:center; margin:4px 0 6px; }
+.slot select{
+  width:100%; height:34px; padding:0 8px; border:1px solid #531122; border-radius:10px; background:#1a0009; color:#ffdfe9;
+  font-weight:700; font-size:13px;
+}
+
+.teams-row{ display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-top:10px }
+.teams-box{ display:flex; flex-direction:column; gap:6px; font-weight:800; color:#ff99b3 }
+.teams-box select{
+  min-width:220px; height:42px; border-radius:12px; border:1px solid #531122; background:#1a0009; color:#ffdfe9;
+  padding:0 12px; font-weight:800; box-shadow:0 4px 10px rgba(0,0,0,.3);
+}
+
+.team-title{ font-size:18px; font-weight:800; margin:0 0 8px 6px }
+.team-row .grid{ grid-template-columns: repeat(6, minmax(0,1fr)); }
+
+.tag{ display:inline-block; padding:3px 8px; border-radius:999px; font-weight:900; font-size:12px; border:1px solid #333; margin-left:6px }
+.tag.rosa{ background:#5b003a; color:#ff66cc; border-color:#7a0050 }
+.tag.dorado{ background:#4d3900; color:#ffd700; border-color:#6b5200 }
+.tag.rojo{ background:#4a0000; color:#ff5a5a; border-color:#7a0000 }
+
+.chips{ display:flex; gap:8px; flex-wrap:wrap; }
+.pill{ display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; background:#1a0009; border:1px solid #3a0a17; font-weight:700; }
+.av-mini{ width:28px; height:28px; border-radius:8px; object-fit:cover; background:#531122; display:block }
+.small{ font-size:12px; color:#9aa0a6 }
+
+/* Track Record */
+.trk{ overflow:auto; background:#12020a; border:1px solid #3a0a17; border-radius:14px; padding:8px; }
+.table{ border-collapse:collapse; width:auto; table-layout:fixed }
+.table th, .table td{ border:1px solid #2f2f35; padding:6px 8px; text-align:center; font-weight:800; font-size:13px; color:#e5e7eb }
+.table th{ background:#1c0a12 }
+.cell{ border-radius:0; display:block; width:100%; padding:6px 0; min-width:0; font-weight:900 }
+.cell.win { background:var(--tr-win); color:#ffffff }
+.cell.top2 { background:var(--tr-top2); color:#2b1700 }
+.cell.btm4 { background:var(--tr-btm4); color:#000 }
+.cell.btm2 { background:var(--tr-btm2); color:#000 }
+.cell.high { background:var(--tr-high); color:#051620 }
+.cell.low  { background:var(--tr-low); color:#300018 }
+.cell.safe { background:var(--tr-safe); color:#111 }
+.cell.elim { background:var(--tr-elim); color:#000 }
+.cell.in   { background:var(--tr-in); color:#001d16 }
+.cell.out  { background:var(--tr-out); color:#fff }
+.cell.grey { background:var(--tr-dead); color:var(--tr-dead-txt) }
+.cell.run  { background:#c0c0c0; color:#000 }
+.cell.champ{ background:#ffd700; color:#000 }
+
+.trk table.table th:nth-child(n+3), .trk table.table td:nth-child(n+3){ width:46px; padding:0; white-space:nowrap; }
+.trk table.table td:nth-child(n+3) .cell{ display:block; width:100%; height:100%; padding:6px 0; margin:0; box-sizing:border-box; border:none; }
+.trk table.table th.final, .trk table.table td.final{ width:220px; }
+
+.toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:18px; z-index:10;
+  background:#000; color:#fff; font-weight:800; padding:10px 14px; border-radius:999px; box-shadow:0 8px 20px rgba(0,0,0,.45);
+  display:none;
+}
+.toast.show{ display:block }
+
+.stage{ display:none }
+.stage.active{ display:block }
+
+/* simple list */
+ul.clean{margin:8px 0 0 18px; padding:0}
+ul.clean li{margin:4px 0}
+
+/* separación clara entre cada regalo */
+#giftList { margin-top: 8px; }
+.gift-row{
+  display:flex; gap:10px; align-items:center;
+  padding:10px 12px; margin:10px 0;
+  border:1px solid var(--glass-brd); border-radius:12px;
+  background: rgba(255,255,255,.04);
+}
+.gift-row + .gift-row{ margin-top:14px; }
+.hide{ display:none !important; }
+/* Fondo infinito (rojo/rosado) que cubre TODO aunque la página sea larga */
+html, body { min-height: 100%; }
+
+body {
+  /* color base oscuro de respaldo */
+  background: #150812;
+}
+
+/* Capa de fondo fija detrás de todo el contenido */
+body::before{
+  content: "";
+  position: fixed;   /* <- clave para que no “se corte” al hacer scroll */
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 18% -10%, rgba(255, 90, 160, .22), transparent 60%),
+    radial-gradient(1000px 600px at 82% 110%, rgba(255, 80, 80, .18), transparent 60%),
+    linear-gradient(180deg, #2a0e1d 0%, #150812 100%);
+}
+/* --- spacing & layout tweaks --- */
+.hide{ display:none !important; }  /* asegura que .hide realmente oculte */
+#duelBox{ margin: 12px 0 28px; }   /* más espacio antes del botón */
+#toTrack{ margin-top: 14px; }      /* separación del botón con lo de arriba */
+
+#winnersBox h4.help{ margin: 10px 0 8px; }
+#btmChips h4.help{ margin: 14px 0 8px; }
+
+/* listas verticales para "A Salvo" y "Nominados" */
+.list-vertical{ display:block; }
+.list-vertical > .row{ margin: 6px 0; }
+
+/* apilar secciones del panel de semis y no a la par */
+#btmChips{ display:block !important; }     /* evita flex side-by-side si hereda .chips */
+.section-title{ margin: 14px 0 8px; }
+.list-vertical{ display:block; }
+.list-vertical > .row{ margin: 6px 0; }
+
+/* un poquito más de aire antes del botón */
+#duelBox{ margin: 12px 0 28px; }
+#toTrack{ margin-top: 14px; }
+
+/* ===== TRACK RECORD COMPACTO: fila fija y bloques a ras ===== */
+:root{
+  --trk-row: 28px;        /* alto exacto de cada fila de episodios */
+  --trk-empty: #2a1e27;   /* color plano para vacías (ajústalo a tu paleta) */
+}
+
+#trkTable{
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+/* Todas las celdas del body heredan la altura exacta de la fila */
+#trkBody tr{ height: var(--trk-row); }
+#trkBody td{
+  padding: 0;
+  height: var(--trk-row);
+  vertical-align: middle;
+  background: transparent !important;
+}
+
+/* Deja padding solo en la columna "Participante" si quieres mantener espacio allí */
+#trkBody td:nth-child(2){ padding: 0 10px; }
+
+/* E1..E14: el span .cell ocupa TODO el td (sin “aire” alrededor) */
+#trkBody td:nth-child(n+3) > .cell{
+  display: block;
+  width: 100%;
+  height: 100%;
+  line-height: var(--trk-row);   /* centra el texto verticalmente */
+  margin: 0;
+  padding: 0;
+  border-radius: 0;              /* sin separación visual entre columnas */
+}
+
+/* Vacías: un solo color plano y sin signo */
+.cell.grey{
+  background: var(--trk-empty) !important;
+  color: transparent !important;
+}
+.cell.grey::after{ content: none !important; }
+
+/* Asegura que las celdas con estado no metan padding vertical extra */
+.cell.win,.cell.top2,.cell.btm4,.cell.low,
+.cell.high,.cell.safe,.cell.btm2,.cell.elim{
+  padding: 0;
+  border-radius: 4px;            /* si las quieres cuadradas, pon 0 */
+}
+
+/* Momentos del Episodio / Eventos especiales */
+#momentsBox{ margin-top: 10px; }
+#momentsList{ margin-top: 6px; }
+.moment-row{
+  display:flex; gap:10px; align-items:center;
+  padding:10px 12px; margin:8px 0;
+  border:1px solid var(--glass-brd);
+  border-radius:12px;
+  background: rgba(255,255,255,.04);
+}
+
+</style>
+</head>
+<body>
+<header class="wrap glass header">
+ <div class="brand">
+    <div class="logo rect">
+  <img src="PersonajesEspecial/logo.png" alt="Logo">
+</div>
+      <div class="h1">The Xpedition — Showdown</div>
+      <div class="step-indicator" id="stepName">Especial de Reunión</div>
+    </div>
+  </div>
+  <div class="control-bar">
+    <button class="btn" id="backBtn" disabled>← Atrás</button>
+    <button class="btn" id="homeBtn" type="button">THE XPEDITION - PÁGINA</button>
+    <button class="btn primary" id="nextBtn" disabled>Continuar →</button>
+  </div>
+</header>
+
+<section class="wrap glass stage active" id="stage-1">
+  <h3 class="help">Elenco (elige 18 participantes)</h3>
+  <div class="grid cols-7" id="castGrid"></div>
+  <div class="control-bar">
+    <span class="help" id="castCountHelp">0/18 seleccionados</span>
+    <button class="btn" id="randomCast">Random Cast</button>
+  </div>
+</section>
+
+<section class="wrap glass stage" id="stage-2">
+  <h3 class="help">Distribuye a los 18 participantes en 3 grupos de 6 (no compiten en equipos, es individual)</h3>
+  <div class="team-board" id="teamBoard3"></div>
+  <div class="control-bar">
+    <button class="btn" id="fillRandom3">Random distribuir</button>
+    <button class="btn" id="clearTeams">Vaciar</button>
+    <button class="btn green" id="confirmTeams3" disabled>Confirmar distribución</button>
+  </div>
+  <div class="help">Grupos: <span class="tag rosa">Rosa</span> · <span class="tag dorado">Dorado</span> · <span class="tag rojo">Rojo</span></div>
+</section>
+
+<section class="wrap glass stage" id="stage-3">
+  <h3 class="help" id="epTitle">Episodio 1</h3>
+  <div class="help" id="epHelp"></div>
+
+  <div class="control-bar">
+    <select id="challengeSelect">
+      <option value="">— Tipo de reto —</option>
+      <option>Rápidez</option><option>Estrategia</option><option>Creatividad</option><option>Inteligencia</option>
+      <option>Agilidad</option><option>Búsqueda</option><option>Duelos</option><option>Moda</option>
+      <option>Música</option><option>Cultura & Conocimiento</option><option>Show de Talentos</option>
+      <option>Rap</option><option>Town of Salem</option><option>Noticiero</option>
+      <option>Suerte</option><option>Bonju Chef</option><option>¿Quién mató a Bonju?</option><option>Bonju Drag Race</option><option>Top Model</option>
+      <option>Wipeout 💦</option><option>Expedición Turística en la Antártida</option><option>Batalla de Baile</option>
+      <option>Covers</option><option>Sillas Musicales</option><option>Entrevista de Trabajo</option><option>Romper Hielos</option><option>La Bomba</option>
+    </select>
+    <button class="btn" id="randomChallenge">Random</button>
+    <button class="btn primary" id="runChallenge" disabled>Generar reto</button>
+  </div>
+
+  <div class="chips" id="challengeSummary" style="margin-top:6px"></div>
+
+  <div id="winnersBox" class="hide">
+    <h4 class="help">Resultados del reto</h4>
+    <div class="chips" id="winnersChips"></div>
+    <div class="chips" id="btmChips"></div>
+<div id="momentsBox" class="hide">
+  <h4 class="help" id="momentsTitle">Momentos del Episodio</h4>
+  <div id="momentsList"></div>
+</div>
+    <div id="giftBox" class="hide">
+      <h4 class="help">Regalo de Estrellas</h4>
+      <div id="giftList"></div>
+    </div>
+    <div class="chips" id="duelBox"></div>
+    <div class="control-bar"><button class="btn primary hide" id="toTrack">Ver Track Record →</button></div>
+  </div>
+</section>
+
+<section class="wrap glass stage" id="stage-6">
+  <h3 class="help" id="trTitle">Track Record — Episodio 1</h3>
+  <div class="trk">
+    <table class="table" id="trkTable">
+      <thead id="trkHead"></thead>
+      <tbody id="trkBody"></tbody>
+    </table>
+  </div>
+  <div class="control-bar">
+    <button class="btn primary" id="nextEpisode">Siguiente episodio →</button>
+    <button class="btn" id="restartSim" style="display:none">SIMULAR DE NUEVO</button>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====== Datos base del simulador original (cast + pronombres) ====== */
+const ALL_PARTICIPANTS = [
+"Dios","Adriana Pereira","Alexandro","Alice","Amanda Lewis","Anderson Moreno","Andromeda","Ari Salgado","Azael","Azealia Midnight","Bayron","Beto","Bruno Macri","Bryan Montalvo","Catalina","Christopher","Cocomong","Coronel","Daelly","Dani","Doppel","Dua Lingo","Eduard","Eduardo","Edna Droga","Elian","Elvin","Emanuel","Emmy Mango","Eris Midnight","Esteban","Felix","Gabriel Sab","Garnet","Greg","Ian Esteban","Ignacio Ricci","Isabel","Ivan Serrano","Ivy","Iñaella Rose","Julián","Kim Camila","Lalamila","Leandro","Lucas Mendez","Luciano","Marcos","Marianito","Mary Hao","Nahuee","Nicki Gorilaj","Nidia Mirella","Ocean Harmony","Oscar","Paula Garcia","Paulis Queen","Peggy","Pier","Plastique Doll","Rafael","Renata","Renzo","Samuel Gamert","Sandro","Silvanya D'Lemberth","Stalin Mango","Vita","Vitany Glambert","Ximena","Xina Ro"
+];
+function __gNorm(s){return String(s||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();}
+const GENDER_MAP = (()=>{
+  const raw=[
+    ["Adriana Pereira","F"],["Alexandro","M"],["Alice","F"],["Amanda Lewis","F"],["Anderson Moreno","M"],["Andromeda","F"],["Ari Salgado","M"],
+    ["Azael","M"],["Azealia Midnight","F"],["Bayron","M"],["Beto","M"],["Bruno Macri","M"],["Bryan Montalvo","M"],
+    ["Catalina","F"],["Christopher","M"],["Cocomong","M"],["Coronel","M"],["Daelly","F"],["Dani","F"],["Dios","M"],
+    ["Doppel","F"],["Dua Lingo","F"],["Eduard","M"],["Eduardo","M"],["Edna Droga","F"],["Elian","M"],["Elvin","M"],
+    ["Emanuel","M"],["Emmy Mango","F"],["Eris Midnight","M"],["Esteban","M"],["Felix","M"],["Gabriel Sab","M"],
+    ["Garnet","M"],["Greg","M"],["Ian Esteban","M"],["Ignacio Ricci","M"],["Isabel","F"],["Ivan Serrano","M"],
+    ["Ivy","F"],["Iñaella Rose","F"],["Julián","M"],["Kim Camila","F"],["Lalamila","F"],["Leandro","M"],
+    ["Lucas Mendez","M"],["Luciano","M"],["Marcos","M"],["Marianito","M"],["Mary Hao","F"],["Nahuee","M"],["Nicki Gorilaj","F"],
+    ["Nidia Mirella","F"],["Ocean Harmony","F"],["Oscar","M"],["Paula Garcia","F"],["Paulis Queen","F"],["Peggy","F"],["Pier","M"],["Plastique Doll","F"],
+    ["Rafael","M"],["Renata","F"],["Renzo","M"],["Samuel Gamert","M"],["Sandro","M"],["Silvanya D'Lemberth","F"],
+    ["Stalin Mango","M"],["Vita","M"],["Vitany Glambert","F"],["Ximena","F"],["Xina Ro","F"]
+  ]; const m={}; raw.forEach(([n,g])=>m[__gNorm(n)]=g); return m;
+})();
+function genderSuffix(name){return (GENDER_MAP[__gNorm(name)]||"M")==="F"?"A":"O";}
+
+/* ====== Track helpers ====== */
+const TR = {
+  cell(s){
+    const map = {WIN:'win', HIGH:'high', SAFE:'safe', LOW:'low', BTM4:'btm4', BTM2:'btm2', ELIM:'elim', DEAD:'dead', CHAMP:'champ', RUN:'run'};
+    const txt = (s==='DEAD') ? '\u00A0' : (s==='WIN' ? 'WIN' : (s==='CHAMP'?'Winner':(s==='RUN'?'Runner Up':s)));
+    return {cls: map[s]||'safe', txt};
+  },
+  dead(){ return TR.cell('DEAD'); }
+};
+
+/* ====== Estado ====== */
+let step=1, episode=1;
+let selected18=[];
+let groups={Rosa:[], Dorado:[], Rojo:[]}; // 3x6
+let groupColors={Rosa:'rosa',Dorado:'dorado',Rojo:'rojo'};
+let groupOrder=['Rosa','Dorado','Rojo'];
+let stars={}; // nombre -> estrellas (solo eps 1-9)
+let advanced=new Set(); // clasificados tras 3 eps de su grupo
+let alive=[]; // quienes llegan a semis
+let eliminated=[]; // orden de eliminación semi/final
+let trackData=[]; // {name, group, cells:[{cls,txt}], final?}
+let finalRank = {}; // nombre -> #
+let nextSemiRank = 9; // 9,8,7,6 para semis
+let episodeDone = {}; // evitar doble generación
+
+const $=sel=>document.querySelector(sel);
+const $$=sel=>Array.from(document.querySelectorAll(sel));
+const toast=t=>{ const el=$("#toast"); el.textContent=t; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1600); };
+
+function makeInitials(name){
+  const d=document.createElement("div"); d.className="placeholder";
+  const letters=(name.split(/\\s+/).map(s=>s[0]).join("").slice(0,2)||"?").toUpperCase();
+  d.textContent=letters; return d;
+}
+function slug(s){
+  return String(s||"")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // sin acentos
+    .replace(/ñ/gi, "n")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+    .trim();
+}
+function imgFor(name){
+  const s = slug(name);
+  const bases = ['PersonajesEspecial','Personajes','personajes','PERSONAJES','.'];
+  const exts  = ["png","jpg","jpeg","webp"];
+  return Array.from(new Set(bases.flatMap(b => exts.map(ext => `${b}/${s}.${ext}`))));
+}
+
+function loadImg(el, candidates, fallbackText=""){
+  let i=0;
+  function next(){
+    if(i>=candidates.length){
+      const parent = el.parentElement;
+      if(parent && !parent.querySelector('.placeholder')){
+        parent.appendChild(makeInitials(fallbackText));
+      }
+      return;
+    }
+    const t=new Image();
+    t.onload=()=>{
+      el.src=t.src;
+      const parent = el.parentElement;
+      const ph = parent ? parent.querySelector('.placeholder') : null;
+      if(ph) ph.remove();
+    };
+    t.onerror=()=>{ i++; next(); };
+    t.src=candidates[i];
+  }
+  next();
+}
+
+function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function sample(arr,k){ const a=arr.slice(); const out=[]; for(let i=0;i<k && a.length;i++){ const idx=Math.floor(Math.random()*a.length); out.push(a.splice(idx,1)[0]); } return out; }
+
+/* ====== Paso 1: Cast ====== */
+const castGrid=$("#castGrid");
+function buildCastGrid(){
+  castGrid.innerHTML="";
+  for(let i=0;i<18;i++){
+    const slot=document.createElement("div"); slot.className="slot"; slot.dataset.index=i;
+    const icon=document.createElement("div"); icon.className="icon";
+    const img=document.createElement("img"); icon.appendChild(img); icon.appendChild(makeInitials("?"));
+    const name=document.createElement("div"); name.className="name"; name.textContent="Elegir participante";
+    const sel=document.createElement("select");
+    sel.innerHTML=`<option value="">— Ninguno —</option>` + ALL_PARTICIPANTS.map(n=>`<option>${n}</option>`).join("");
+    sel.addEventListener("change", ()=>{
+      const v=sel.value; name.textContent=v||"Elegir participante";
+      const pic=icon.querySelector("img");
+      if(v){ loadImg(pic, imgFor(v), v); } else {
+        const newImg=document.createElement("img"); pic.replaceWith(newImg);
+        icon.querySelector(".placeholder")?.remove(); icon.appendChild(makeInitials("?"));
+      }
+      updateCastState();
+      enforceUnique('#castGrid');
+    });
+    slot.appendChild(icon); slot.appendChild(name); slot.appendChild(sel);
+    castGrid.appendChild(slot);
+  }
+}
+function enforceUnique(containerSel){
+  const container=document.querySelector(containerSel);
+  const selects=Array.from(container.querySelectorAll('select'));
+  const chosen=new Set(selects.map(s=>s.value).filter(Boolean));
+  selects.forEach(sel=>{
+    Array.from(sel.options).forEach(opt=>{
+      if(!opt.value){ opt.disabled=false; return; }
+      if(sel.value===opt.value){ opt.disabled=false; } else { opt.disabled=chosen.has(opt.value); }
+    });
+  });
+}
+buildCastGrid(); enforceUnique('#castGrid');
+
+function updateCastState(){
+  const vals=$$("#castGrid select").map(s=>s.value).filter(Boolean);
+  $("#castCountHelp").textContent=`${new Set(vals).size}/18 seleccionados`;
+  $("#nextBtn").disabled = !(vals.length===18 && new Set(vals).size===18);
+}
+$("#randomCast").addEventListener("click", ()=>{
+  const picks=shuffle(ALL_PARTICIPANTS.filter(n=>n!=="Bonju")).slice(0,18);
+  $$("#castGrid select").forEach((s,i)=>{ s.value=picks[i]||""; s.dispatchEvent(new Event('change')); });
+  enforceUnique('#castGrid');
+});
+$("#nextBtn").addEventListener("click", ()=>{
+  if(step===1){
+    selected18=$$("#castGrid select").map(s=>s.value).filter(Boolean);
+    stars={}; selected18.forEach(n=>stars[n]=0);
+    trackData=selected18.map(n=>({name:n, group: null, cells:[]}));
+    build3TeamsBoard();
+    go(2);
+  }else if(step===2){
+    go(3);
+    updateEpisodeUI();
+  }
+});
+
+/* ====== Paso 2: Distribución 3 grupos ====== */
+const teamBoard3=$("#teamBoard3");
+function makeTeamRow(label, count, tagClass){
+  const wrap=document.createElement("div"); wrap.className="team-row";
+  const h=document.createElement("div"); h.className="team-title"; h.innerHTML=`${label} <span class="tag ${tagClass}">${tagClass.toUpperCase()}</span>`;
+  const grid=document.createElement("div"); grid.className="grid"; grid.style.gridTemplateColumns="repeat(6,1fr)";
+  for(let i=0;i<count;i++){
+    const slot=document.createElement("div"); slot.className="slot"; slot.dataset.team=label;
+    const icon=document.createElement("div"); icon.className="icon";
+    const img=document.createElement("img"); icon.appendChild(img); icon.appendChild(makeInitials("?"));
+    const name=document.createElement("div"); name.className="name"; name.textContent="Vacío";
+    const s=document.createElement("select");
+    s.innerHTML=`<option value="">— Ninguno —</option>` + selected18.map(n=>`<option>${n}</option>`).join("");
+    s.addEventListener("change", ()=>{
+      const v=s.value; name.textContent=v||"Vacío";
+      const pic=icon.querySelector("img");
+      if(v){ loadImg(pic, imgFor(v), v); } else { const newImg=document.createElement("img"); pic.replaceWith(newImg); icon.querySelector(".placeholder")?.remove(); icon.appendChild(makeInitials("?")); }
+      validateTeamFill3(); enforceUnique('#stage-2');
+    });
+    slot.appendChild(icon); slot.appendChild(name); slot.appendChild(s);
+    grid.appendChild(slot);
+  }
+  wrap.appendChild(h); wrap.appendChild(grid);
+  return wrap;
+}
+function build3TeamsBoard(){
+  teamBoard3.innerHTML="";
+  groups={Rosa:[],Dorado:[],Rojo:[]};
+  teamBoard3.appendChild(makeTeamRow("Rosa",6,'rosa'));
+  teamBoard3.appendChild(makeTeamRow("Dorado",6,'dorado'));
+  teamBoard3.appendChild(makeTeamRow("Rojo",6,'rojo'));
+  validateTeamFill3(); enforceUnique('#stage-2');
+}
+function validateTeamFill3(){
+  const selects=$$("#stage-2 .slot select");
+  const vals=selects.map(s=>s.value).filter(Boolean);
+  const filledAll = vals.length===18 && new Set(vals).size===18;
+  $("#confirmTeams3").disabled = !filledAll;
+}
+$("#fillRandom3").addEventListener("click", ()=>{
+  const picks=shuffle(selected18);
+  let idx=0;
+  $$("#stage-2 .slot select").forEach(s=>{ s.value=picks[idx++]; s.dispatchEvent(new Event('change')); });
+  enforceUnique('#stage-2');
+});
+$("#clearTeams").addEventListener("click", ()=>{
+  $$("#stage-2 .slot select").forEach(s=>{ s.value=""; s.dispatchEvent(new Event('change')); });
+  enforceUnique('#stage-2');
+});
+$("#confirmTeams3").addEventListener("click", ()=>{
+  groups={Rosa:[],Dorado:[],Rojo:[]};
+  $$("#stage-2 .team-row").forEach(row=>{
+    const title=row.querySelector(".team-title").textContent.split(" ")[0];
+    const vals=Array.from(row.querySelectorAll('select')).map(s=>s.value).filter(Boolean);
+    groups[title]=vals;
+  });
+  // asigna group a trackData
+  trackData.forEach(r=>{
+    for(const g of Object.keys(groups)){ if(groups[g].includes(r.name)){ r.group=g; break; } }
+  });
+  buildTRSkeleton();
+  toast("Distribución guardada");
+  $("#nextBtn").disabled=false;
+});
+
+/* ====== Paso 3: Episodios ====== */
+const challengeSelect=$("#challengeSelect");
+challengeSelect.addEventListener("change", ()=>{ $("#runChallenge").disabled=!challengeSelect.value; });
+$("#randomChallenge").addEventListener("click", ()=>{
+  const opts=Array.from(challengeSelect.options).filter(o=>o.value);
+  const p=pick(opts); challengeSelect.value=p.value; challengeSelect.dispatchEvent(new Event("change"));
+});
+
+function currentActiveGroup(ep){
+  if(ep>=1 && ep<=3) return 'Rosa';
+  if(ep>=4 && ep<=6) return 'Dorado';
+  if(ep>=7 && ep<=9) return 'Rojo';
+  return null; // semis/final
+}
+function updateEpisodeUI(){
+  $("#epTitle").textContent = `Episodio ${episode}`;
+  const g=currentActiveGroup(episode);
+  if(g){
+    $("#epHelp").innerHTML = `Compite el grupo <b>${g}</b> — <span class="tag ${groupColors[g]}">${groupColors[g].toUpperCase()}</span>. Dos ganadores (TOP2) obtienen 2 ⭐ cada uno; el ganador del duelo entre TOP2 obtiene 1 ⭐ extra. El resto (BTM4) tienen 1 ⭐ para regalar.`;
+  }else if(episode>=10 && episode<=13){
+    $("#epHelp").textContent = "SEMIFINAL — Un solo ganador (WIN), los dos peores (BTM2) van a duelo de eliminación";
+  }else{
+    $("#epHelp").textContent = "GRAN FINAL — Top 5; los 3 peores son eliminados; duelo final entre los 2 restantes para definir Winner y Runner-Up.";
+  }
+  $("#challengeSummary").innerHTML="";
+  $("#winnersBox").classList.add("hide");
+  $("#winnersChips").innerHTML="";
+  $("#btmChips").innerHTML="";
+  $("#giftBox").classList.add("hide");
+  $("#giftList").innerHTML="";
+  $("#duelBox").innerHTML="";
+  clearMoments();  
+  $("#toTrack").classList.add("hide");
+  $("#toTrack").disabled = true;
+  challengeSelect.selectedIndex=0; $("#runChallenge").disabled=!!episodeDone[episode];
+}
+
+$("#runChallenge").addEventListener("click", ()=>{
+  if(episodeDone[episode]){ toast("Este reto ya fue generado."); return; }
+  const type=challengeSelect.value || "Reto";
+  if(episode<=9){
+    runGroupEpisode(type);
+  }else if(episode<=13){
+    runSemiEpisode(type);
+  }else{
+    runFinalEpisode(type);
+  }
+  episodeDone[episode]=true;
+  $("#runChallenge").disabled = true;
+});
+
+function chip(name, txt){
+  const span=document.createElement("span"); span.className="pill";
+  const img=document.createElement("img"); img.className="av-mini";
+  img.src=""; loadImg(img, imgFor(name), name);
+  const b=document.createElement("b"); b.textContent=name;
+  const t=document.createElement("span"); t.className="small"; t.textContent= txt ? (" — "+txt) : "";
+  span.appendChild(img); span.appendChild(b); span.appendChild(t); return span;
+}
+
+function setTR(name, ep, cls, txt){
+  const row = trackData.find(r=>r.name===name);
+  while(row.cells.length<14){ row.cells.push({cls:'grey',txt:''}); }
+  row.cells[ep-1] = {cls, txt};
+}
+
+function ensureGreyForInactive(ep){
+  const g=currentActiveGroup(ep);
+  trackData.forEach(r=>{
+    if(ep<=9){
+      if(r.group!==g){ setTR(r.name, ep, 'grey', ''); }
+    }
+  });
+}
+
+function resolveGroupAdvances(group, duelWinner){
+  const list = groups[group].slice();
+  // ordenar por estrellas desc
+  list.sort((a,b)=> (stars[b]||0) - (stars[a]||0));
+
+  // Candidatos por puntaje en el corte (3ro)
+  const cutStars = (stars[list[2]] || 0);
+  // Fijos: con + estrellas que el corte
+  const fixed = list.filter(n => (stars[n]||0) > cutStars);
+  // Empatados en el corte
+  const tied  = list.filter(n => (stars[n]||0) === cutStars);
+
+  let chosen = [];
+  if(fixed.length >= 3){
+    // Raro, pero si hay 3+ con más de cutStars, toma los 3 primeros
+    chosen = fixed.slice(0,3);
+  }else{
+    chosen = fixed.slice(); // todos los que van arriba del corte
+    const need = 3 - chosen.length;
+    if(tied.length > need){
+      // DESempate: lo decide el ganador del duelo (simulado: elige aleatoriamente entre empatados)
+      const picked = duelTieBreakPick(duelWinner, tied, need);
+      chosen = chosen.concat(picked);
+      // Mensaje de desempate
+      const msg = document.createElement("div");
+      msg.className = "help";
+      msg.textContent = `Desempate decidido por ${duelWinner}: ${picked.join(" • ")}`;
+      $("#duelBox").appendChild(msg);
+    }else{
+      chosen = chosen.concat(tied);
+    }
+  }
+  chosen.forEach(n => advanced.add(n));
+  return chosen;
+}
+
+/* “Evento especial” de desempate: el duelWinner "elige" (simulado) a los necesitados desde los empatados */
+function duelTieBreakPick(duelWinner, tied, k){
+  // puedes cambiar la heurística; por ahora, pura aleatoriedad controlada
+  return sample(tied, k);
+}
+
+function assignRanksForGroup(group){
+  // orden para los que NO avanzan al cierre del bloque
+  const orderMap = { Rosa:[18,17,16], Dorado:[15,14,13], Rojo:[12,11,10] };
+  const order = orderMap[group] || [];
+
+  // perdedores del grupo (no avanzados)
+  const losers = groups[group].filter(n => !advanced.has(n)).slice();
+
+  // peor primero (menos estrellas); empates aleatorios
+  losers.sort((a,b)=>{
+    const da=(stars[a]||0), db=(stars[b]||0);
+    if(da!==db) return da-db;
+    return Math.random()<0.5 ? -1 : 1;
+  });
+
+  // asignar # 18-16 / 15-13 / 12-10
+  losers.forEach((name, i)=>{
+    if(order[i] != null){ setRank(name, order[i]); }
+  });
+}
+
+function runGroupEpisode(type){
+  const g = currentActiveGroup(episode);
+  const active = groups[g].slice();
+  if(active.length !== 6){ toast("Debe haber 6 en el grupo activo."); return; }
+
+  // 1) Seleccionar TOP2
+  const top2 = sample(active, 2);
+
+  // 2) Estrellas base: +2 a ambos
+  top2.forEach(n => { stars[n] = (stars[n]||0) + 2; });
+
+  // 3) Duelo TOP2 → ganador +1 (total 3⭐) = WIN; el otro queda TOP2 (2⭐)
+  const duelWinner = pick(top2);
+  stars[duelWinner] += 1;
+
+  // 4) Track Record (SIN "ELEGIBLE")
+  const otherTop2 = top2.find(n => n !== duelWinner);
+  setTR(duelWinner, episode, 'win', 'WIN');     // 3⭐
+  setTR(otherTop2, episode, 'top2', 'TOP2');    // 2⭐
+
+  // 5) BTM4
+  const btm4 = active.filter(n => !top2.includes(n));
+  btm4.forEach(n => setTR(n, episode, 'btm4', 'BTM4'));
+
+  // 6) REGALO DE ESTRELLAS — AUTOMÁTICO (NO elegible por el jugador)
+  const giftPairs = autoGiftStarsAndMap(btm4, active); // [[giver, receiver], ...] y suma +1⭐ por cada giver
+
+  // 7) Render de resultados
+  $("#winnersBox").classList.remove("hide");
+  $("#winnersChips").innerHTML = "";
+  $("#winnersChips").appendChild(chip(duelWinner, "WIN (+1⭐ duelo)"));  // Winner del duelo
+  $("#winnersChips").appendChild(chip(otherTop2, "TOP2"));               // El otro TOP2
+
+  // Mostrar regalos en 4 filas, sin selects (solo anuncio)
+  renderGiftRows(giftPairs);
+  renderEpisodeMoments(episode);  
+
+  // Nota de duelo
+  $("#duelBox").innerHTML = "";
+  const duelNote = document.createElement("div");
+  duelNote.className = "help";
+  $("#duelBox").appendChild(duelNote);
+
+  // 8) Si es cierre de bloque (E3/E6/E9): resolver AVANCE de 3 con desempate por el ganador del duelo
+  if([3,6,9].includes(episode)){
+const adv = resolveGroupAdvances(g, duelWinner);
+assignRanksForGroup(g);
+
+// Bloque: "Clasificados por <Grupo>" + chips (icono + nombre)
+const title = document.createElement("div");
+title.className = "help";
+title.innerHTML = `Clasificados por <b>${g}</b>:`;   // Título
+
+const row = document.createElement("div");
+row.className = "chips";                              // fila horizontal
+adv.forEach(n => row.appendChild(chip(n, "")));       // chip = icono + nombre
+
+$("#duelBox").appendChild(title);
+$("#duelBox").appendChild(row);
+  }
+
+  // 9) Solo entonces permitir “Ver Track Record →” (evita episodios vacíos)
+  $("#toTrack").disabled = false;
+  $("#toTrack").classList.remove("hide");
+  $("#toTrack").onclick = ()=>{ buildTRTable(); go(6); };
+
+  // 10) Guard: un reto por episodio
+  episodeDone[episode] = true;
+  $("#runChallenge").disabled = true;
+}
+
+
+/* Asigna +1⭐ automáticamente: cada BTM4 regala 1 ⭐ a alguien del grupo (no a sí mismo).
+   Devuelve pares [giver, receiver] en el mismo orden que btm4 para render. */
+function autoGiftStarsAndMap(gifters, activePool){
+  const pairs = [];
+  gifters.forEach(giver=>{
+    const choices = activePool.filter(x => x !== giver);
+    const receiver = pick(choices);
+    stars[receiver] = (stars[receiver] || 0) + 1;
+    pairs.push([giver, receiver]);
+  });
+  return pairs;
+}
+
+/* Muestra "Icon + Nombre — regala 1 ⭐ a (Icon + Nombre)" en 4 filas, sin selects ni botones */
+function renderGiftRows(pairs){
+  const box = $("#giftBox");
+  if(!box) return;
+  box.classList.remove("hide");
+  $("#giftList").innerHTML = "";
+  $("#giftBox").querySelector("h4").textContent = "Regalo de Estrellas";
+  pairs.forEach(([giver, receiver])=>{
+    const row = document.createElement("div");
+    row.className = "gift-row";
+    row.appendChild(chip(giver, ""));
+    row.appendChild(document.createTextNode(" — regala 1 ⭐ a "));
+    row.appendChild(chip(receiver, ""));
+    $("#giftList").appendChild(row);
+  });
+  // Asegúrate de NO tener botones de “Auto asignar” / “Confirmar”
+  $("#randomGifts")?.remove();
+  $("#confirmGifts")?.remove();
+}
+
+/* ===== Momentos del episodio ===== */
+
+// pool de participantes activos según episodio
+function getActivePoolForMoments(ep){
+  const g = currentActiveGroup(ep);
+  if(g) return groups[g].slice();            // E1–E9: los 6 del grupo activo
+  if(ep>=10 && ep<=13) return alive.slice(); // Semis: quienes siguen vivos
+  if(ep===14){
+    const fin = Array.from(advanced).filter(n=>!eliminated.includes(n));
+    return fin.length ? fin.slice() : alive.slice(); // Top 5, si no usa 'alive'
+  }
+  return selected18.slice();
+}
+function pickOther(arr, notName){
+  const pool = arr.filter(n=>n!==notName);
+  return pool.length ? pick(pool) : notName;
+}
+function clearMoments(){
+  const b = $("#momentsBox");
+  if(!b) return;
+  b.classList.add("hide");
+  $("#momentsTitle").textContent = "Momentos del Episodio";
+  $("#momentsList").innerHTML = "";
+}
+function renderEpisodeMoments(ep){
+  const box = $("#momentsBox"); if(!box) return;
+  clearMoments();
+  const pool = getActivePoolForMoments(ep);
+  if(pool.length < 2) return;
+
+  const out = [];
+  if(ep<=9){
+    // E1–E9: debajo del resultado (TOP2/WIN) y encima de 'Regalo de Estrellas'
+    const tpls = [
+      (a)=>[a, " — colapsó durante el reto."],
+      (a)=>[a, " — tuvo una pelea con ", pickOther(pool,a), "."],
+      (a)=>[a, " — intentó convencer a ", pickOther(pool,a), " de darle una estrella."],
+      (a)=>[a, " — formó una alianza con ", pickOther(pool,a), " durante el episodio."],
+      (a)=>[a, " — se puso a llorar porque “merece más estrellas”."]
+    ];
+    const who = sample(pool, Math.min(4, pool.length));
+    who.forEach((a,i)=> out.push( tpls[i % tpls.length](a) ));
+  } else if(ep>=10 && ep<=13){
+    // Semifinal: ARRIBA de todos los resultados
+    $("#momentsTitle").textContent = "Eventos Especiales";
+    const tpls = [
+      (a)=>[a, " — destacó en el reto."],
+      (a)=>[a, " — declaró delante de todos que ", pickOther(pool,a), " es una persona hipócrita."],
+      (a)=>[a, " — dijo que ", pickOther(pool,a), " no merecía avanzar a la semifinal."],
+      (a)=>[a, " — se agarró a golpes con ", pickOther(pool,a), " y le sacó la Eduardo Buñuelo."]
+    ];
+    const who = sample(pool, Math.min(3, pool.length));
+    who.forEach((a,i)=> out.push( tpls[i % tpls.length](a) ));
+    // mover el bloque al inicio del winnersBox
+    const wb = $("#winnersBox");
+    if(wb && box){ wb.insertBefore(box, wb.firstElementChild?.nextSibling || wb.firstChild); }
+  } else if(ep===14){
+    // Final: arriba
+    $("#momentsTitle").textContent = "Eventos Especiales";
+    const tpls = [
+      (a)=>[a, " — dijo que ", pickOther(pool,a), " no merecía llegar a la final."],
+      (a)=>[a, " — tuvo errores durante el reto final."],
+      (a)=>[a, " — formó una alianza con ", pickOther(pool,a), " para ser primer y segundo lugar."]
+    ];
+    const who = sample(pool, Math.min(3, pool.length));
+    who.forEach((a,i)=> out.push( tpls[i % tpls.length](a) ));
+    const wb = $("#winnersBox");
+    if(wb && box){ wb.insertBefore(box, wb.firstElementChild?.nextSibling || wb.firstChild); }
+  }
+
+  if(out.length){
+    const list = $("#momentsList");
+    out.forEach(parts=>{
+      const row = document.createElement("div");
+      row.className = "moment-row";
+      // primer item es nombre (chip)
+      row.appendChild(chip(parts[0], ""));
+      // resto: texto o chips alternados
+      for(let i=1;i<parts.length;i++){
+        const p = parts[i];
+        if(typeof p === "string") row.appendChild(document.createTextNode(p));
+        else row.appendChild(chip(p, ""));
+      }
+      list.appendChild(row);
+    });
+    box.classList.remove("hide");
+  }
+}
+
+
+function runSemiEpisode(type){
+  if(alive.length===0){ alive = Array.from(advanced); }
+  if(alive.length<=2 && episode<=13){ toast("No hay suficientes para semis."); return; }
+
+  // Ganador/a (inmune)
+  const win = pick(alive);
+  setTR(win, episode, 'win', 'WIN');
+  const rest = alive.filter(n=>n!==win);
+
+  // HIGH: exactamente 2 si se puede
+  let highs = [];
+  if(rest.length >= 2)      highs = sample(rest, 2);
+  else if(rest.length === 1) highs = rest.slice();
+
+  // LOW: desde los que no son HIGH, garantizando mínimo 1
+  let remaining = rest.filter(n=>!highs.includes(n));
+  let lowCandidates = [];
+  if(remaining.length >= 1){
+    const lowCount = Math.max(1, Math.floor(remaining.length*0.5));
+    lowCandidates = sample(remaining, Math.min(lowCount, remaining.length));
+  }else if(highs.length > 0){
+    // Si todo cayó en HIGH, mueve 1 a LOW para garantizar LOW
+    const moved = sample(highs, 1)[0];
+    highs = highs.filter(n=>n!==moved);
+    lowCandidates = [moved];
+    remaining = rest.filter(n=>!highs.includes(n) && !lowCandidates.includes(n));
+  }
+
+  // Nominados (BTM2): preferir desde LOW; completar desde remaining si falta
+  let btmPool = lowCandidates.slice();
+  if(btmPool.length < 2){
+    const need = 2 - btmPool.length;
+    const extras = sample(remaining.filter(n=>!btmPool.includes(n)), need);
+    btmPool = btmPool.concat(extras);
+  }
+  const btm2 = sample(btmPool, Math.min(2, btmPool.length));
+
+  // Para Track Record
+let lowNonNom = lowCandidates.filter(n=>!btm2.includes(n));
+let safe = rest.filter(n=>!highs.includes(n) && !lowCandidates.includes(n) && !btm2.includes(n));
+
+// ⚠️ Garantiza que SIEMPRE exista al menos un LOW visible
+if(lowNonNom.length === 0){
+  // intenta marcar LOW a alguien del resto (no HIGH, no nominados)
+  const extraPool = rest.filter(n=>!highs.includes(n) && !btm2.includes(n));
+  if(extraPool.length){
+    const extra = pick(extraPool);
+    lowNonNom = [extra];
+    // re-calcula SAFE (sácalo de safe)
+    safe = safe.filter(n=>n!==extra);
+  }else if(highs.length){
+    // como fallback, mueve 1 de HIGH a LOW
+    const moved = sample(highs,1)[0];
+    highs = highs.filter(n=>n!==moved);
+    lowNonNom = [moved];
+  }
+}
+
+// Pintar TR
+highs.forEach(n=> setTR(n, episode, 'high', 'HIGH'));
+lowNonNom.forEach(n=> setTR(n, episode, 'low', 'LOW'));
+safe.forEach(n=> setTR(n, episode, 'safe', 'SAFE'));
+btm2.forEach(n=> setTR(n, episode, 'btm2', 'BTM2'));
+
+
+  // Eliminado (solo en TR) + ranking 9→6
+  const loser = pick(btm2);
+  setTR(loser, episode, 'elim', 'ELIM');
+
+  // >>>> RANK DE SEMIS (9,8,7,6)
+  if(typeof nextSemiRank === "undefined") nextSemiRank = 9;
+  if(nextSemiRank >= 6){ setRank(loser, nextSemiRank); nextSemiRank--; }
+  // <<<<
+
+  alive = alive.filter(n=>n!==loser);
+  eliminated.push(loser);
+
+  // ===== Panel de resultados (apilado con títulos) =====
+  $("#winnersBox").classList.remove("hide");
+  $("#giftBox")?.classList.add("hide"); $("#giftList")?.replaceChildren();
+
+
+// título
+const tWin = document.createElement("h4");
+tWin.className = "help section-title";
+tWin.textContent = "Ganador/a";
+$("#winnersChips").appendChild(tWin);
+  renderEpisodeMoments(episode);  
+
+// lista en columna con el chip debajo
+const list = document.createElement("div");
+list.className = "list-vertical";
+const row  = document.createElement("div");
+row.className = "row";
+row.appendChild(chip(win,"WIN (inmune)"));
+list.appendChild(row);
+$("#winnersChips").appendChild(list);
+
+
+  // Construye secciones apiladas: High → A Salvo → Low → Nominados
+  const bc = $("#btmChips"); bc.innerHTML="";
+
+  function addSection(title, items, label){
+    if(!items || !items.length) return;
+    const t = document.createElement("h4"); t.className="help section-title"; t.textContent=title;
+    const list = document.createElement("div"); list.className="list-vertical";
+    items.forEach(n=>{
+      const row=document.createElement("div"); row.className="row";
+      row.appendChild(chip(n, label));
+      list.appendChild(row);
+    });
+    bc.appendChild(t); bc.appendChild(list);
+  }
+
+  addSection("High", highs, "HIGH");
+  addSection("A Salvo", safe, "SAFE");
+  addSection("Low", lowNonNom, "LOW");
+  addSection("Nominados", btm2, "BTM2");   // Abajo del todo
+
+  $("#duelBox").innerHTML="";
+  $("#toTrack").disabled = false;
+  $("#toTrack").classList.remove("hide");
+  $("#toTrack").onclick = ()=>{ buildTRTable(); go(6); };
+}
+
+
+function runFinalEpisode(type){
+  if(alive.length!==5){
+    if(alive.length===0){ alive = Array.from(advanced).filter(n=>!eliminated.includes(n)); }
+    while(alive.length>5){ alive.splice(Math.floor(Math.random()*alive.length),1); }
+  }
+  const worst3 = sample(alive, 3);
+  // Marcar como ELIM (no números en la celda)
+  worst3.forEach(n=>{ setTR(n, episode, 'elim', 'ELIM'); });
+  // ranking 5,4,3 (para columna #)
+  const rankOrder = [5,4,3];
+  worst3.forEach((n, idx)=> setRank(n, rankOrder[idx]) );
+  alive = alive.filter(n=>!worst3.includes(n));
+
+  const [f1,f2] = alive;
+  setTR(f1, episode, 'top2', 'FINAL');
+  setTR(f2, episode, 'top2', 'FINAL');
+
+  const champion = pick([f1,f2]);
+  const runner = champion===f1? f2 : f1;
+  setTR(champion, episode, 'champ', 'Winner');
+  setTR(runner, episode, 'run', 'Runner Up');
+  setRank(runner, 2);
+  setRank(champion, 1);
+
+  $("#winnersBox").classList.remove("hide");
+  renderEpisodeMoments(episode);   // Eventos Especiales arriba de TODO
+  $("#winnersChips").innerHTML="";
+  $("#winnersChips").appendChild(chip(champion,"Winner"));
+  $("#winnersChips").appendChild(chip(runner,"Runner Up"));
+const tOut = document.createElement("h4"); tOut.className="help section-title"; tOut.textContent = "Eliminados";
+const outList = document.createElement("div"); outList.className = "list-vertical";
+worst3.forEach(n=>{
+  const r=document.createElement("div"); r.className="row";
+  r.appendChild(chip(n,"ELIM"));
+  outList.appendChild(r);
+});
+  $("#winnersChips").appendChild(tOut);
+  $("#winnersChips").appendChild(outList);
+  $("#toTrack").disabled = false;
+  $("#toTrack").classList.remove("hide");
+  $("#toTrack").onclick = ()=>{ buildTRTable(); go(6); $("#nextEpisode").style.display="none"; $("#restartSim").style.display="inline-flex"; };
+}
+
+/* ====== Navegación ====== */
+const stepName = $("#stepName");
+const nextBtn = $("#nextBtn");
+const homeBtn = $("#homeBtn");
+if (homeBtn) {
+  homeBtn.addEventListener("click", () => {
+    location.href = "https://thexpedition.github.io/The-Xpedition-Official/"; 
+  });
+}
+
+function go(n){
+  [1,2,3,6].forEach(id=>$("#stage-"+id)?.classList.remove("active"));
+  $("#stage-"+n)?.classList.add("active");
+  step=n;
+  const labels={1:"Paso 1 · Elige el elenco (18)",2:"Paso 2 · Distribución de 3 grupos",3:`Episodio ${episode}`,6:`Track Record — Episodio ${episode}`};
+  $("#stepName").textContent = labels[n]||"";
+  if(n===6){ buildTRTable(); }
+}
+
+
+function setRank(name, n){
+  finalRank[name] = n;
+  updateRankColumn();
+  maybeSortRowsByRank();
+}
+function everyoneRanked(){
+  return Object.keys(finalRank).length === selected18.length;
+}
+function maybeSortRowsByRank(){
+  const body = $("#trkBody");
+  if(!body) return;
+  const rows = Array.from(body.querySelectorAll("tr"));
+  rows.sort((a,b)=>{
+    const ra = finalRank[a.dataset.name] ?? 0; // sin # => 0
+    const rb = finalRank[b.dataset.name] ?? 0;
+    return ra - rb; // 1 arriba, 18 abajo
+  });
+  body.replaceChildren(...rows);
+}
+function updateRankColumn(){
+  const body = $("#trkBody");
+  if(!body) return;
+  Array.from(body.querySelectorAll("tr")).forEach(tr=>{
+    const name = tr.dataset.name;
+    tr.cells[0].textContent = finalRank[name] || "";
+  });
+}
+
+function buildTRSkeleton(){
+  const head=$("#trkHead"); const body=$("#trkBody");
+  head.innerHTML=""; body.innerHTML="";
+  const tr=document.createElement("tr");
+  tr.innerHTML = "<th>#</th><th>Participante</th>" + (new Array(14).fill(0).map((_,i)=>`<th>E${i+1}</th>`).join(""));
+  head.appendChild(tr);
+  trackData.forEach((r,i)=>{
+    const trb=document.createElement("tr");
+    trb.dataset.name = r.name;
+    const num=`<td></td>`;
+    const name=`<td style="text-align:left;padding-left:10px">${r.name} <span class="tag ${groupColors[r.group]||''}">${(r.group||'')}</span> <span class="small">⭐ ${stars[r.name]||0}</span></td>`;
+    const cells=new Array(14).fill(0).map(()=>`<td><span class="cell grey"></span></td>`).join("");
+    trb.innerHTML=num+name+cells;
+    body.appendChild(trb);
+  });
+}
+
+function buildTRTable(){
+  ensureGreyForInactive(episode);
+  const head=$("#trkHead"); const body=$("#trkBody");
+  // Rebuild rows to show latest stars
+  body.querySelectorAll("tr").forEach((row)=>{
+    const nm = row.dataset.name;
+    const r = trackData.find(x=>x.name===nm) || {name:nm, group:null, cells:[]};
+    row.cells[1].innerHTML = `${r.name} <span class="tag ${groupColors[r.group]||''}">${(r.group||'')}</span> <span class="small">⭐ ${stars[r.name]||0}</span>`;
+    for(let e=1;e<=14;e++){
+      const c=r.cells[e-1] || {cls:'grey',txt:''};
+      row.cells[e+1].innerHTML = `<span class=\"cell ${c.cls}\">${('txt' in c ? c.txt : '')}</span>`;
+    }
+  });
+  $("#trTitle").textContent=`Track Record — Episodio ${episode}`;
+  maybeSortRowsByRank();
+}
+
+$("#nextEpisode").addEventListener("click", ()=>{
+  if(episode<9){
+    // cerrar bloque si justo terminó 3/6/9 — ya se resolvió al confirmar regalos
+    if([3,6,9].includes(episode)){
+      // preparar semis: al final de 9 consolidar alive
+      if(episode===9){
+        alive = Array.from(advanced);
+        // grisar el resto para E10+
+        const out = selected18.filter(n=>!alive.includes(n));
+        out.forEach(n=>{ /* seguirán gris */ });
+      }
+    }
+  }
+  episode++;
+  if(episode>14) episode=14;
+  go(3); updateEpisodeUI();
+});
+
+$("#restartSim").addEventListener("click", ()=>{ location.reload(); });
+
+/* Inicial */
+buildCastGrid();
+</script>
+</body>
+</html>
