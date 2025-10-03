@@ -373,7 +373,7 @@ body::before{
 <script>
 /* ====== Datos base del simulador original (cast + pronombres) ====== */
 const ALL_PARTICIPANTS = [
-"Dios","Adriana Pereira","Alexandro","Alice","Amanda Lewis","Anderson Moreno","Andromeda","Ari Salgado","Azael","Azealia Midnight","Bayron","Beto","Bruno Macri","Bryan Montalvo","Catalina","Christopher","Cocomong","Coronel","Daelly","Dani","Doppel","Dua Lingo","Eduard","Eduardo","Edna Droga","Elian","Elvin","Emanuel","Emmy Mango","Eris Midnight","Esteban","Felix","Gabriel Sab","Garnet","Greg","Ian Esteban","Ignacio Ricci","Isabel","Ivan Serrano","Ivy","Iñaella Rose","Julián","Kim Camila","Lalamila","Leandro","Lucas Mendez","Luciano","Marcos","Marianito","Mary Hao","Nahuee","Nicki Gorilaj","Nidia Mirella","Ocean Harmony","Oscar","Paula Garcia","Paulis Queen","Peggy","Pier","Plastique Doll","Rafael","Renata","Renzo","Samuel Gamert","Sandro","Silvanya D'Lemberth","Stalin Mango","Vita","Vitany Glambert","Ximena","Xina Ro"
+"Dios", "Adriana Pereira", "Alexandro", "Alice", "Amanda Lewis", "Anderson Moreno", "Andromeda", "Ari Salgado", "Azael", "Azealia Midnight", "Bayron", "Beto", "Bruno Macri", "Bryan Montalvo", "Catalina", "Christopher", "Cocomong", "Coronel", "Daelly", "Dani", "Doppel", "Dua Lingo", "Eduard", "Eduardo", "Edna Droga", "Elian", "Elvin", "Emanuel", "Emmy Mango", "Eris Midnight", "Esteban", "Felix", "Gabriel Sab", "Garnet", "Greg", "Ian Esteban", "Ignacio Ricci", "Isabel", "Ivan Serrano", "Ivy", "Iñaella Rose", "Julián", "Kim Camila", "Lalamila", "Leandro", "Lucas Mendez", "Luciano", "Marcos", "Marianito", "Mary Hao", "Nahuee", "Nicki Gorilaj", "Nidia Mirella", "Ocean Harmony", "Oscar", "Paula Garcia", "Paulis Queen", "Peggy", "Pier", "Plastique Doll", "Rafael", "Renata", "Renzo", "Samuel Gamert", "Sandro", "Silvanya D'Lemberth", "Sophia Asdero", "Stalin Mango", "Vita", "Vitany Glambert", "Ximena", "Xina Ro"
 ];
 function __gNorm(s){return String(s||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();}
 const GENDER_MAP = (()=>{
@@ -387,7 +387,7 @@ const GENDER_MAP = (()=>{
     ["Ivy","F"],["Iñaella Rose","F"],["Julián","M"],["Kim Camila","F"],["Lalamila","F"],["Leandro","M"],
     ["Lucas Mendez","M"],["Luciano","M"],["Marcos","M"],["Marianito","M"],["Mary Hao","F"],["Nahuee","M"],["Nicki Gorilaj","F"],
     ["Nidia Mirella","F"],["Ocean Harmony","F"],["Oscar","M"],["Paula Garcia","F"],["Paulis Queen","F"],["Peggy","F"],["Pier","M"],["Plastique Doll","F"],
-    ["Rafael","M"],["Renata","F"],["Renzo","M"],["Samuel Gamert","M"],["Sandro","M"],["Silvanya D'Lemberth","F"],
+    ["Rafael","M"],["Renata","F"],["Renzo","M"],["Samuel Gamert","M"],["Sandro","M"],["Silvanya D'Lemberth","F"],["Sophia Asdero","F"],
     ["Stalin Mango","M"],["Vita","M"],["Vitany Glambert","F"],["Ximena","F"],["Xina Ro","F"]
   ]; const m={}; raw.forEach(([n,g])=>m[__gNorm(n)]=g); return m;
 })();
