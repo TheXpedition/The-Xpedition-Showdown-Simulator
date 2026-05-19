@@ -1501,13 +1501,19 @@ function runFinalEpisode(type){
   activeSet.delete(champion);
 
   const runners =
-    winners.filter(n=>n!==champion);
+  winners.filter(n=>n!==champion);
 
-  runners.forEach(n=>{
+// Runner Up = #2
+if(runners[0]){
+  setRank(runners[0],2);
+  activeSet.delete(runners[0]);
+}
 
-    setRank(n,2);
-    activeSet.delete(n);
-  });
+// Tercer lugar = #3
+if(runners[1]){
+  setRank(runners[1],3);
+  activeSet.delete(runners[1]);
+}
 
   const top3Row =
     document.createElement("div");
